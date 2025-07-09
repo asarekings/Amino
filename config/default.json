@@ -1,0 +1,33 @@
+{
+  "data": {
+    "data_path": "test.csv",
+    "min_observations": 5,
+    "normalization_method": "interpolate",
+    "train_size": 0.7,
+    "val_size": 0.15,
+    "test_size": 0.15,
+    "random_state": 42
+  },
+  "embeddings": {
+    "extractor_type": "ensemble",
+    "use_presto": true,
+    "use_clay": true,
+    "batch_size": 32,
+    "device": "auto"
+  },
+  "models": {
+    "train_models": ["random_forest", "xgboost", "lightgbm"],
+    "ensemble": true,
+    "hyperparameter_tuning": false
+  },
+  "output": {
+    "output_dir": "outputs",
+    "submission_file": "submission.csv",
+    "save_models": true,
+    "create_plots": true
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": "logs/amino.log"
+  }
+}
