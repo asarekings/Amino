@@ -315,13 +315,19 @@ def extract_geofm_embeddings(sequences_dict: Dict,
     """
     logger.info(f"Extracting GeoFM embeddings using {extractor_type}")
     
+    # Filter kwargs for each extractor type
+    common_kwargs = {k: v for k, v in kwargs.items() 
+                    if k in ['device', 'batch_size']}
+    
     # Initialize extractor
     if extractor_type == "presto":
-        extractor = PrestoEmbeddingExtractor(**kwargs)
+        extractor = PrestoEmbeddingExtractor(**common_kwargs)
     elif extractor_type == "clay":
-        extractor = ClayEmbeddingExtractor(**kwargs)
+        extractor = ClayEmbeddingExtractor(**common_kwargs)
     elif extractor_type == "ensemble":
-        extractor = EnsembleEmbeddingExtractor(**kwargs)
+        ensemble_kwargs = {k: v for k, v in kwargs.items() 
+                          if k in ['use_presto', 'use_clay', 'device', 'batch_size']}
+        extractor = EnsembleEmbeddingExtractor(**ensemble_kwargs)
     else:
         raise ValueError(f"Unknown extractor type: {extractor_type}")
     

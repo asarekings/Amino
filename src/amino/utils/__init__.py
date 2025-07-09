@@ -260,14 +260,19 @@ def save_model_results(results: Dict[str, Any], output_dir: str):
     metrics_file = os.path.join(output_dir, "metrics.json")
     
     # Convert numpy arrays to lists for JSON serialization
-    json_results = {}
-    for key, value in results.items():
-        if isinstance(value, np.ndarray):
-            json_results[key] = value.tolist()
-        elif isinstance(value, (np.int64, np.float64)):
-            json_results[key] = float(value)
+    def convert_for_json(obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, (np.int64, np.float64, np.int32, np.float32)):
+            return float(obj)
+        elif isinstance(obj, dict):
+            return {k: convert_for_json(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_for_json(item) for item in obj]
         else:
-            json_results[key] = value
+            return obj
+    
+    json_results = convert_for_json(results)
     
     with open(metrics_file, 'w') as f:
         json.dump(json_results, f, indent=2)
@@ -296,28 +301,38 @@ def save_config(config: Dict[str, Any], config_path: str):
 
 def get_memory_usage():
     """Get current memory usage."""
-    import psutil
-    
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    
-    return {
-        'rss_mb': memory_info.rss / 1024 / 1024,
-        'vms_mb': memory_info.vms / 1024 / 1024,
-        'percent': process.memory_percent()
-    }
+    try:
+        import psutil
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        
+        return {
+            'rss_mb': memory_info.rss / 1024 / 1024,
+            'vms_mb': memory_info.vms / 1024 / 1024,
+            'percent': process.memory_percent()
+        }
+    except ImportError:
+        return {
+            'rss_mb': 0,
+            'vms_mb': 0,
+            'percent': 0
+        }
 
 
 def print_system_info():
     """Print system information."""
-    import psutil
     import platform
     
     logger.info("System Information:")
     logger.info(f"Platform: {platform.platform()}")
     logger.info(f"Processor: {platform.processor()}")
-    logger.info(f"CPU cores: {psutil.cpu_count()}")
-    logger.info(f"RAM: {psutil.virtual_memory().total / 1024**3:.1f} GB")
+    
+    try:
+        import psutil
+        logger.info(f"CPU cores: {psutil.cpu_count()}")
+        logger.info(f"RAM: {psutil.virtual_memory().total / 1024**3:.1f} GB")
+    except ImportError:
+        logger.info("CPU/RAM info: psutil not available")
     
     # GPU information
     try:
